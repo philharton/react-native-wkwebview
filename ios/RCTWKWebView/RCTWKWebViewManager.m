@@ -74,6 +74,71 @@ RCT_EXPORT_METHOD(reload:(nonnull NSNumber *)reactTag)
   }];
 }
 
+RCT_EXPORT_METHOD(stopLoading:(nonnull NSNumber *)reactTag)
+{
+  [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTWKWebView *> *viewRegistry) {
+    RCTWKWebView *view = viewRegistry[reactTag];
+    if (![view isKindOfClass:[RCTWKWebView class]]) {
+      RCTLogError(@"Invalid view returned from registry, expecting RCTWKWebView, got: %@", view);
+    } else {
+      [view stopLoading];
+    }
+  }];
+}
+
+RCT_EXPORT_METHOD(loadUrl:(nonnull NSNumber *)reactTag
+                  value:(NSString*)url)
+{
+  [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTWKWebView *> *viewRegistry) {
+    RCTWKWebView *view = viewRegistry[reactTag];
+    if (![view isKindOfClass:[RCTWKWebView class]]) {
+      RCTLogError(@"Invalid view returned from registry, expecting RCTWKWebView, got: %@", view);
+    } else {
+      [view loadUrl: url];
+    }
+  }];
+}
+
+RCT_EXPORT_METHOD(evaluateJavascript:(nonnull NSNumber *)reactTag
+                 value:(NSString*)script
+                 callback:(RCTResponseSenderBlock)callback)
+{
+  [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTWKWebView *> *viewRegistry) {
+    RCTWKWebView *view = viewRegistry[reactTag];
+    if (![view isKindOfClass:[RCTWKWebView class]]) {
+      RCTLogError(@"Invalid view returned from registry, expecting RCTWKWebView, got: %@", view);
+    } else {
+      [view evaluateJavascript: script completionHandler:^(id result, NSError *error) {
+        NSString *resultAsString = [NSString stringWithFormat:@"%@", result];
+        callback(@[[NSNull null], resultAsString]);
+      }];
+    }
+  }];
+}
+
+RCT_EXPORT_METHOD(captureAreaToPNGFile:(nonnull NSNumber *)reactTag
+                 path:(NSString*)path 
+                 left:(nonnull NSNumber *)left
+                 top:(nonnull NSNumber *)top
+                 width:(nonnull NSNumber *)width
+                 height:(nonnull NSNumber *)height
+                 callback:(RCTResponseSenderBlock)callback)
+{
+  [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTWKWebView *> *viewRegistry) {
+    RCTWKWebView *view = viewRegistry[reactTag];
+    if (![view isKindOfClass:[RCTWKWebView class]]) {
+      RCTLogError(@"Invalid view returned from registry, expecting RCTWKWebView, got: %@", view);
+    } else {
+      BOOL result = [view captureAreaToPNGFileWithPath: path atXPosition:left atYPosition:top withWidth:width withHeight:height];
+      if (result) {
+        callback(@[[NSNull null], @"true"]);
+      } else {
+        callback(@[[NSNull null], @"false"]);
+      }
+    }
+  }];
+}
+
 #pragma mark - Exported synchronous methods
 
 - (BOOL)webView:(__unused RCTWKWebView *)webView

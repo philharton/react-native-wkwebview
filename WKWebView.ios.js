@@ -14,8 +14,8 @@ import ReactNative, {
 } from 'react-native';
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 import deprecatedPropType from 'react-native/Libraries/Utilities/deprecatedPropType';
-import invariant from 'react-native/node_modules/fbjs/lib/invariant';
-import keyMirror from 'react-native/node_modules/fbjs/lib/keyMirror';
+import invariant from 'invariant';
+import keyMirror from 'key-mirror';
 var WKWebViewManager = NativeModules.WKWebViewManager;
 
 var BGWASH = 'rgba(255,255,255,0.8)';
@@ -296,6 +296,48 @@ var WKWebView = React.createClass({
       UIManager.RCTWKWebView.Commands.reload,
       null
     );
+  },
+
+  stopLoading: function() {
+    UIManager.dispatchViewManagerCommand(
+      this.getWebViewHandle(),
+      UIManager.RCTWKWebView.Commands.stopLoading,
+      null
+    );
+  },
+
+  loadUrl: function (url: string) {
+    WKWebViewManager.loadUrl(this.getWebViewHandle(), url);
+  },
+
+  evaluateJavascript: function (script: string) {
+    const that = this;
+    return new Promise(function(resolve, reject) {
+      WKWebViewManager.evaluateJavascript(
+        that.getWebViewHandle(),
+        script,
+        function(error, result) {
+          resolve(result);
+        }
+      );
+    });
+  },
+
+  captureAreaToPNGFile: function (path, left, top, width, height) {
+    const that = this;
+    return new Promise(function(resolve, reject) {
+      WKWebViewManager.captureAreaToPNGFile(
+        that.getWebViewHandle(),
+        path, left, top, width, height,
+        function(error, result) {
+          if (result === 'true') {
+            resolve();
+          } else {
+            reject('Webview image capture failed');
+          }
+        }
+      );
+    });
   },
 
   /**

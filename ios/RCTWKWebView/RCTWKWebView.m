@@ -64,6 +64,36 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
   }
 }
 
+- (void)stopLoading
+{
+  [_webView stopLoading];
+}
+
+- (void)loadUrl:(NSString *)url
+{
+  NSURL *nsUrl = [NSURL URLWithString: url]; 
+  NSURLRequest *request = [NSURLRequest requestWithURL:nsUrl]; 
+  [_webView loadRequest:request];
+}
+
+- (void)evaluateJavascript:(NSString *)script completionHandler:(void (^)(id,
+                                     NSError *error))handler
+{
+  [_webView evaluateJavaScript:script completionHandler:handler];
+}
+
+- (BOOL)captureAreaToPNGFileWithPath:(NSString *)path atXPosition:(nonnull NSNumber *)left atYPosition:(nonnull NSNumber *)top withWidth:(nonnull NSNumber *)width withHeight:(nonnull NSNumber *)height
+{
+  CGSize size = CGSizeMake(width.floatValue, height.floatValue);
+  UIGraphicsBeginImageContextWithOptions(size, self.opaque, 0.0f);
+  CGRect bounds = CGRectOffset(self.bounds, -left.floatValue, 0);
+  [self drawViewHierarchyInRect:bounds afterScreenUpdates:NO];
+  UIImage * snapshotImage = UIGraphicsGetImageFromCurrentImageContext();
+  UIGraphicsEndImageContext();
+  NSData *binaryImageData = UIImagePNGRepresentation(snapshotImage);
+  return [binaryImageData writeToFile:path atomically:YES];
+}
+
 - (void)setSource:(NSDictionary *)source
 {
   if (![_source isEqualToDictionary:source]) {

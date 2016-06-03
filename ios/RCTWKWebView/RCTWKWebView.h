@@ -30,5 +30,10 @@ shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
 - (void)goForward;
 - (void)goBack;
 - (void)reload;
+- (void)stopLoading;
+- (void)loadUrl:(NSString *)url;
+- (void)evaluateJavascript:(NSString *)script completionHandler:(void (^)(id,
+                                     NSError *error))handler;
+- (BOOL)captureAreaToPNGFileWithPath:(NSString *)path atXPosition:(nonnull NSNumber *)left atYPosition:(nonnull NSNumber *)top withWidth:(nonnull NSNumber *)width withHeight:(nonnull NSNumber *)height;
 
 @end
