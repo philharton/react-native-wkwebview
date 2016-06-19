@@ -142,6 +142,10 @@ var WKWebView = React.createClass({
      */
     renderLoading: PropTypes.func,
     /**
+     * Invoked on message from JS to native
+     */
+    onBridgeMessage: PropTypes.func,
+    /**
      * Invoked when load finish
      */
     onLoad: PropTypes.func,
@@ -250,6 +254,7 @@ var WKWebView = React.createClass({
         scrollEnabled={this.props.scrollEnabled}
         contentInset={this.props.contentInset}
         automaticallyAdjustContentInsets={this.props.automaticallyAdjustContentInsets}
+        onBridgeMessage={this._onBridgeMessage}
         onLoadingStart={this._onLoadingStart}
         onLoadingFinish={this._onLoadingFinish}
         onLoadingError={this._onLoadingError}
@@ -355,6 +360,12 @@ var WKWebView = React.createClass({
    */
   getWebViewHandle: function(): any {
     return ReactNative.findNodeHandle(this.refs[RCT_WEBVIEW_REF]);
+  },
+
+  _onBridgeMessage: function(event) {
+    if (this.props.onBridgeMessage) {
+      this.props.onBridgeMessage(event.nativeEvent.message);
+    }
   },
 
   _onLoadingStart: function(event: Event) {

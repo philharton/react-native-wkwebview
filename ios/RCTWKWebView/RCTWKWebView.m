@@ -13,6 +13,7 @@
 
 @interface RCTWKWebView () <WKNavigationDelegate, RCTAutoInsetsProtocol>
 
+@property (nonatomic, copy) RCTDirectEventBlock onBridgeMessage;
 @property (nonatomic, copy) RCTDirectEventBlock onLoadingStart;
 @property (nonatomic, copy) RCTDirectEventBlock onLoadingFinish;
 @property (nonatomic, copy) RCTDirectEventBlock onLoadingError;
@@ -33,12 +34,31 @@
     super.backgroundColor = [UIColor clearColor];
     _automaticallyAdjustContentInsets = YES;
     _contentInset = UIEdgeInsetsZero;
-    _webView = [[WKWebView alloc] initWithFrame:self.bounds];
+
+    // from: http://www.joshuakehn.com/2014/10/29/using-javascript-with-wkwebview-in-ios-8.html
+    WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc]init];
+    WKUserContentController* controller = [[WKUserContentController alloc]init];
+    [controller addScriptMessageHandler:self name:@"observe"];
+    config.userContentController= controller;
+
+    _webView = [[WKWebView alloc] initWithFrame:self.bounds configuration:config];
     _webView.navigationDelegate = self;
     [_webView addObserver:self forKeyPath:@"estimatedProgress" options:NSKeyValueObservingOptionNew context:nil];
     [self addSubview:_webView];
   }
   return self;
+}
+
+- (void)userContentController:(WKUserContentController *)userContentController
+      didReceiveScriptMessage:(WKScriptMessage *)message
+{
+  if (_onBridgeMessage) {
+    NSMutableDictionary *event = [NSMutableDictionary
+      dictionaryWithDictionary:@{
+      @"message": message.body
+    }];
+    _onBridgeMessage(event);
+  }
 }
 
 RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
