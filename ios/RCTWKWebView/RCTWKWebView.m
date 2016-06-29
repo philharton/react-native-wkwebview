@@ -224,6 +224,13 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 
   BOOL isJSNavigation = [scheme isEqualToString:RCTJSNavigationScheme];
 
+  // http://stackoverflow.com/questions/25713069/why-is-wkwebview-not-opening-links-with-target-blank
+  // https://github.com/sticksen/STKWebKitViewController/blob/f4a39fcefcae24e2f82c45fd43e9a19cc09a29e4/Pod/Classes/STKWebKitViewController.m
+  if (!navigationAction.targetFrame) {
+    [webView loadRequest:navigationAction.request];
+    return decisionHandler(WKNavigationActionPolicyAllow);
+  }
+
   // skip this for the JS Navigation handler
   if (!isJSNavigation && _onShouldStartLoadWithRequest) {
     NSMutableDictionary<NSString *, id> *event = [self baseEvent];
