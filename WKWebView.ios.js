@@ -260,11 +260,8 @@ var WKWebView = React.createClass({
         scrollEnabled={this.props.scrollEnabled}
         contentInset={this.props.contentInset}
         automaticallyAdjustContentInsets={this.props.automaticallyAdjustContentInsets}
-<<<<<<< HEAD
         onBridgeMessage={this._onBridgeMessage}
-=======
         sendCookies={this.props.sendCookies}
->>>>>>> CRAlpha/master
         onLoadingStart={this._onLoadingStart}
         onLoadingFinish={this._onLoadingFinish}
         onLoadingError={this._onLoadingError}
