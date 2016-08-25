@@ -40,6 +40,8 @@
     WKUserContentController* controller = [[WKUserContentController alloc]init];
     [controller addScriptMessageHandler:self name:@"observe"];
     config.userContentController= controller;
+    config.allowsInlineMediaPlayback = YES;
+    config.requiresUserActionForMediaPlayback = NO;
 
     _webView = [[WKWebView alloc] initWithFrame:self.bounds configuration:config];
     _webView.navigationDelegate = self;
