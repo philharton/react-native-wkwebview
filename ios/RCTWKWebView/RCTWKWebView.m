@@ -53,18 +53,6 @@
   return self;
 }
 
-- (void)userContentController:(WKUserContentController *)userContentController
-      didReceiveScriptMessage:(WKScriptMessage *)message
-{
-  if (_onBridgeMessage) {
-    NSMutableDictionary *event = [NSMutableDictionary
-      dictionaryWithDictionary:@{
-      @"message": message.body
-    }];
-    _onBridgeMessage(event);
-  }
-}
-
 RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
 
 - (void)loadRequest:(NSURLRequest *)request
