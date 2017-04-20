@@ -11,7 +11,7 @@ import ReactNative, {
   View,
   NativeModules,
   Text,
-  ActivityIndicatorIOS
+  ActivityIndicator
 } from 'react-native';
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 import deprecatedPropType from 'react-native/Libraries/Utilities/deprecatedPropType';
@@ -49,7 +49,7 @@ type Event = Object;
 
 var defaultRenderLoading = () => (
   <View style={styles.loadingView}>
-    <ActivityIndicatorIOS />
+    <ActivityIndicator />
   </View>
 );
 var defaultRenderError = (errorDomain, errorCode, errorDesc) => (
@@ -167,10 +167,15 @@ var WKWebView = React.createClass({
      */
     onProgress: PropTypes.func,
     /**
+     * Receive message from webpage
+     */
+    onMessage: PropTypes.func,
+    /**
      * @platform ios
      */
     bounces: PropTypes.bool,
     scrollEnabled: PropTypes.bool,
+    allowsBackForwardNavigationGestures: PropTypes.bool,
     automaticallyAdjustContentInsets: PropTypes.bool,
     contentInset: EdgeInsetsPropType,
     onNavigationStateChange: PropTypes.func,
@@ -189,9 +194,22 @@ var WKWebView = React.createClass({
     onShouldStartLoadWithRequest: PropTypes.func,
     /**
      * Copies cookies from sharedHTTPCookieStorage when calling loadRequest.
-     * Set this to true to emulate behavior of WebView component
+     * Set this to true to emulate behavior of WebView component.
      */
     sendCookies: PropTypes.bool,
+    /**
+     * If set to true, target="_blank" or window.open will be opened in WebView, instead
+     * of new window. Default is false to be backward compatible.
+     */
+    openNewWindowInWebView: PropTypes.bool,
+    /**
+     * Sets the customized user agent by using of the WKWebView
+    */
+    customUserAgent: PropTypes.string,
+    /**
+     * A Boolean value that determines whether paging is enabled for the scroll view.
+    */
+    pagingEnabled: PropTypes.bool,
   },
   getInitialState() {
     return {
@@ -242,7 +260,10 @@ var WKWebView = React.createClass({
       WKWebViewManager.startLoadWithResult(!!shouldStart, event.nativeEvent.lockIdentifier);
     });
 
-    var source = this.props.source || {};
+    var source = Object.assign({}, this.props.source || {} , { 
+      sendCookies: this.props.sendCookies,
+      customUserAgent: this.props.customUserAgent
+    });
     if (this.props.html) {
       source.html = this.props.html;
     } else if (this.props.url) {
@@ -259,14 +280,16 @@ var WKWebView = React.createClass({
         bounces={this.props.bounces}
         scrollEnabled={this.props.scrollEnabled}
         contentInset={this.props.contentInset}
+        allowsBackForwardNavigationGestures={this.props.allowsBackForwardNavigationGestures}
         automaticallyAdjustContentInsets={this.props.automaticallyAdjustContentInsets}
-        onBridgeMessage={this._onBridgeMessage}
-        sendCookies={this.props.sendCookies}
+        openNewWindowInWebView={this.props.openNewWindowInWebView}
         onLoadingStart={this._onLoadingStart}
         onLoadingFinish={this._onLoadingFinish}
         onLoadingError={this._onLoadingError}
         onProgress={this._onProgress}
+        onMessage={this._onMessage}
         onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
+        pagingEnabled={this.props.pagingEnabled}
       />;
 
     return (
@@ -353,6 +376,21 @@ var WKWebView = React.createClass({
   },
 
   /**
+   * Stop loading the current page.
+   */
+  stopLoading: function() {
+    UIManager.dispatchViewManagerCommand(
+      this.getWebViewHandle(),
+      UIManager.RCTWKWebView.Commands.stopLoading,
+      null
+    )
+  },
+
+  evaluateJavaScript: function(js) {
+    return WKWebViewManager.evaluateJavaScript(this.getWebViewHandle(), js);
+  },
+
+  /**
    * We return an event with a bunch of fields including:
    *  url, title, loading, canGoBack, canGoForward
    */
@@ -407,6 +445,11 @@ var WKWebView = React.createClass({
   _onProgress(event: Event) {
     var onProgress = this.props.onProgress;
     onProgress && onProgress(event.nativeEvent.progress);
+  },
+
+  _onMessage(event: Event) {
+    var onMessage = this.props.onMessage;
+    onMessage && onMessage(event.nativeEvent);
   }
 });
 

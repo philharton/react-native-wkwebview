@@ -1,9 +1,10 @@
 #import "RCTWKWebViewManager.h"
 
-#import "RCTBridge.h"
-#import "RCTUIManager.h"
 #import "RCTWKWebView.h"
-#import "UIView+React.h"
+#import <React/RCTBridge.h>
+#import <React/RCTUtils.h>
+#import <React/RCTUIManager.h>
+#import <React/UIView+React.h>
 
 #import <WebKit/WebKit.h>
 
@@ -28,17 +29,19 @@ RCT_EXPORT_MODULE()
 
 RCT_EXPORT_VIEW_PROPERTY(source, NSDictionary)
 RCT_REMAP_VIEW_PROPERTY(bounces, _webView.scrollView.bounces, BOOL)
+RCT_REMAP_VIEW_PROPERTY(pagingEnabled, _webView.scrollView.pagingEnabled, BOOL)
 RCT_REMAP_VIEW_PROPERTY(scrollEnabled, _webView.scrollView.scrollEnabled, BOOL)
+RCT_REMAP_VIEW_PROPERTY(allowsBackForwardNavigationGestures, _webView.allowsBackForwardNavigationGestures, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(injectedJavaScript, NSString)
+RCT_EXPORT_VIEW_PROPERTY(openNewWindowInWebView, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(contentInset, UIEdgeInsets)
 RCT_EXPORT_VIEW_PROPERTY(automaticallyAdjustContentInsets, BOOL)
-RCT_EXPORT_VIEW_PROPERTY(onBridgeMessage, RCTDirectEventBlock)
-RCT_EXPORT_VIEW_PROPERTY(sendCookies, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(onLoadingStart, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onLoadingFinish, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onLoadingError, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onShouldStartLoadWithRequest, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onProgress, RCTDirectEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onMessage, RCTDirectEventBlock)
 
 RCT_EXPORT_METHOD(goBack:(nonnull NSNumber *)reactTag)
 {
@@ -88,58 +91,27 @@ RCT_EXPORT_METHOD(stopLoading:(nonnull NSNumber *)reactTag)
   }];
 }
 
-RCT_EXPORT_METHOD(loadUrl:(nonnull NSNumber *)reactTag
-                  value:(NSString*)url)
+RCT_EXPORT_METHOD(evaluateJavaScript:(nonnull NSNumber *)reactTag
+                  js:(NSString *)js
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
 {
   [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTWKWebView *> *viewRegistry) {
     RCTWKWebView *view = viewRegistry[reactTag];
     if (![view isKindOfClass:[RCTWKWebView class]]) {
       RCTLogError(@"Invalid view returned from registry, expecting RCTWKWebView, got: %@", view);
     } else {
-      [view loadUrl: url];
-    }
-  }];
-}
-
-RCT_EXPORT_METHOD(evaluateJavascript:(nonnull NSNumber *)reactTag
-                 value:(NSString*)script
-                 callback:(RCTResponseSenderBlock)callback)
-{
-  [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTWKWebView *> *viewRegistry) {
-    RCTWKWebView *view = viewRegistry[reactTag];
-    if (![view isKindOfClass:[RCTWKWebView class]]) {
-      RCTLogError(@"Invalid view returned from registry, expecting RCTWKWebView, got: %@", view);
-    } else {
-      [view evaluateJavascript: script completionHandler:^(id result, NSError *error) {
-        NSString *resultAsString = [NSString stringWithFormat:@"%@", result];
-        callback(@[[NSNull null], resultAsString]);
+      [view evaluateJavaScript:js completionHandler:^(id result, NSError *error) {
+        if (error) {
+          reject(@"js_error", @"Error occurred while evaluating Javascript", error);
+        } else {
+          resolve(result);
+        }
       }];
     }
   }];
 }
 
-RCT_EXPORT_METHOD(captureAreaToPNGFile:(nonnull NSNumber *)reactTag
-                 path:(NSString*)path 
-                 left:(nonnull NSNumber *)left
-                 top:(nonnull NSNumber *)top
-                 width:(nonnull NSNumber *)width
-                 height:(nonnull NSNumber *)height
-                 callback:(RCTResponseSenderBlock)callback)
-{
-  [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTWKWebView *> *viewRegistry) {
-    RCTWKWebView *view = viewRegistry[reactTag];
-    if (![view isKindOfClass:[RCTWKWebView class]]) {
-      RCTLogError(@"Invalid view returned from registry, expecting RCTWKWebView, got: %@", view);
-    } else {
-      BOOL result = [view captureAreaToPNGFileWithPath: path atXPosition:left atYPosition:top withWidth:width withHeight:height];
-      if (result) {
-        callback(@[[NSNull null], @"true"]);
-      } else {
-        callback(@[[NSNull null], @"false"]);
-      }
-    }
-  }];
-}
 
 #pragma mark - Exported synchronous methods
 
@@ -151,7 +123,7 @@ shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
   _shouldStartLoad = YES;
   request[@"lockIdentifier"] = @(_shouldStartLoadLock.condition);
   callback(request);
-  
+
   // Block the main thread for a maximum of 250ms until the JS thread returns
   if ([_shouldStartLoadLock lockWhenCondition:0 beforeDate:[NSDate dateWithTimeIntervalSinceNow:.25]]) {
     BOOL returnValue = _shouldStartLoad;

@@ -1,4 +1,4 @@
-#import "RCTView.h"
+#import <React/RCTView.h>
 
 @class RCTWKWebView;
 
@@ -25,16 +25,14 @@ shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
 @property (nonatomic, copy) NSDictionary *source;
 @property (nonatomic, assign) UIEdgeInsets contentInset;
 @property (nonatomic, assign) BOOL automaticallyAdjustContentInsets;
-@property (nonatomic, assign) BOOL sendCookies;
+@property (nonatomic, assign) BOOL openNewWindowInWebView;
 @property (nonatomic, copy) NSString *injectedJavaScript;
+
 
 - (void)goForward;
 - (void)goBack;
 - (void)reload;
 - (void)stopLoading;
-- (void)loadUrl:(NSString *)url;
-- (void)evaluateJavascript:(NSString *)script completionHandler:(void (^)(id,
-                                     NSError *error))handler;
-- (BOOL)captureAreaToPNGFileWithPath:(NSString *)path atXPosition:(nonnull NSNumber *)left atYPosition:(nonnull NSNumber *)top withWidth:(nonnull NSNumber *)width withHeight:(nonnull NSNumber *)height;
+- (void)evaluateJavaScript:(NSString *)javaScriptString completionHandler:(void (^)(id, NSError *error))completionHandler;
 
 @end
