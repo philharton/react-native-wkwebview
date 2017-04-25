@@ -1,5 +1,7 @@
 #import "RCTWKWebView.h"
 
+#import "WeakScriptMessageDelegate.h"
+
 #import <WebKit/WebKit.h>
 #import <UIKit/UIKit.h>
 
@@ -39,7 +41,7 @@
     _contentInset = UIEdgeInsetsZero;
     WKWebViewConfiguration* config = [[WKWebViewConfiguration alloc] init];
     WKUserContentController* userController = [[WKUserContentController alloc]init];
-    [userController addScriptMessageHandler:self name:@"reactNative"];
+    [userController addScriptMessageHandler:[[WeakScriptMessageDelegate alloc] initWithDelegate:self] name:@"reactNative"];
     config.userContentController = userController;
     config.allowsInlineMediaPlayback = YES;
     config.requiresUserActionForMediaPlayback = NO;
