@@ -10,8 +10,10 @@ React Native comes with [WebView](http://facebook.github.io/react-native/docs/we
 
 1. Install from npm (note the postfix in the package name): `npm install react-native-wkwebview-reborn`
 2. In the XCode's "Project navigator", right click on your project's Libraries folder ➜ Add Files to <...>
-3. Go to node_modules ➜ react-native-wkwebview ➜ ios ➜ select RCTWKWebView folder and create a group
-4. Compile and profit (Remember to set Minimum Deployment Target = 8.0)
+3. Go to node_modules ➜ react-native-wkwebview ➜ ios ➜ select RCTWKWebView.xcodeproj
+4. Go your build target ➜ Build Phases ➜ Link Binary With Libraries, click "+" and select libRCTWkWebView.a (see the following screenshot for reference)
+![Linking](https://user-images.githubusercontent.com/608221/28060167-0650e3f4-6659-11e7-8085-7a8c2615f90f.png)
+5. Compile and profit (Remember to set Minimum Deployment Target = 8.0)
 
 **Alternative #2**
 
@@ -62,9 +64,17 @@ It allows you to provide a fallback URL for iOS 8 users.
 <WKWebView source={{ file: RNFS.MainBundlePath + '/data/index.html', allowingReadAccessToURL: RNFS.MainBundlePath }} />
 ```
 
-- **customUserAgent="MyUserAgent"**
+- **userAgent="MyUserAgent" (or customUserAgent="...")**
 
 Set a custom user agent for WKWebView. Note this only works on iOS 9+. Previous version will simply ignore this props.
+
+- **hideKeyboardAccessoryView**
+
+This will hide the keyboard accessory view (`<` `>` and `Done`). Default is false.
+
+- **allowsLinkPreview**
+
+A Boolean value that determines whether pressing on a link displays a preview of the destination for the link. This props is available on devices that support 3D Touch. In iOS 10 and later, the default value is true; before that, the default value is false.
 
 #### Communication from WKWebview to React Native
 
@@ -111,8 +121,8 @@ window.receivedMessageFromReactNative = function(data) {
 Then you can send message from React Native with this method call:
 
 ```
-// <WKWebView ref="webview" />
-this.refs.webview.evaluateJavaScript('receivedMessageFromReactNative("Hello from the other side.")');
+// <WKWebView ref={ref => { this.webview = ref; }} />
+this.webview.evaluateJavaScript('receivedMessageFromReactNative("Hello from the other side.")');
 ```
 
 #### Currently supported props are:
@@ -136,6 +146,7 @@ this.refs.webview.evaluateJavaScript('receivedMessageFromReactNative("Hello from
 - onShouldStartLoadWithRequest
 - pagingEnabled
 - scrollEnabled
+- directionalLockEnabled
 
 ####  Unsupported props are:
 

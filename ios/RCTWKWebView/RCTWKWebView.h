@@ -1,3 +1,5 @@
+#import <WebKit/WebKit.h>
+
 #import <React/RCTView.h>
 
 @class RCTWKWebView;
@@ -20,6 +22,8 @@ shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
 
 @interface RCTWKWebView : RCTView
 
+- (instancetype)initWithProcessPool:(WKProcessPool *)processPool;
+
 @property (nonatomic, weak) id<RCTWKWebViewDelegate> delegate;
 
 @property (nonatomic, copy) NSDictionary *source;
@@ -27,10 +31,13 @@ shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
 @property (nonatomic, assign) BOOL automaticallyAdjustContentInsets;
 @property (nonatomic, assign) BOOL openNewWindowInWebView;
 @property (nonatomic, copy) NSString *injectedJavaScript;
+@property (nonatomic, assign) BOOL hideKeyboardAccessoryView;
 
 
 - (void)goForward;
 - (void)goBack;
+- (BOOL)canGoBack;
+- (BOOL)canGoForward;
 - (void)reload;
 - (void)stopLoading;
 - (void)evaluateJavaScript:(NSString *)javaScriptString completionHandler:(void (^)(id, NSError *error))completionHandler;
